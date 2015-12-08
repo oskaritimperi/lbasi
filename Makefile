@@ -5,3 +5,6 @@ calc1: calc1.pas | obj
 
 obj:
 	mkdir obj
+
+test:
+	cd tests && pybot calc1.txt
