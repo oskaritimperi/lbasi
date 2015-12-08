@@ -40,6 +40,8 @@ type
         constructor Create(Text_: AnsiString);
 
         procedure Error;
+        procedure SkipWhitespace;
+        function AtEnd: Boolean;
         function GetNextToken: Token;
         procedure Eat(T: TokenType);
         function Expr: Integer;
@@ -97,22 +99,22 @@ begin
     Raise Exception.Create('error!');
 end;
 
+procedure Interpreter.SkipWhitespace;
+begin
+    while (not AtEnd) and IsWhiteSpace(Text[CurPos]) do
+        Inc(CurPos);
+end;
+
+function Interpreter.AtEnd: Boolean;
+begin
+    Result := CurPos > Length(Text);
+end;
+
 function Interpreter.GetNextToken: Token;
 var
     Text_: String;
     CurrentChar: Char;
     Start: Integer;
-
-    procedure SkipWhitespace;
-    begin
-        while (CurPos <= Length(Text)) and IsWhiteSpace(Text[CurPos]) do
-            Inc(CurPos);
-    end;
-
-    function AtEnd: Boolean;
-    begin
-        Result := CurPos > Length(Text);
-    end;
 begin
     SkipWhitespace;
 
