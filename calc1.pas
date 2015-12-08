@@ -143,9 +143,8 @@ begin
     begin
         Result := TokenInteger.Create(GetInteger);
         Exit;
-    end;
-
-    if CurChar = '+' then
+    end
+    else if CurChar = '+' then
     begin
         Result := TokenPlus.Create;
         Inc(CurPos);
