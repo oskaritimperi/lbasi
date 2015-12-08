@@ -180,12 +180,19 @@ begin
     Eat(TT_Integer);
 
     Op := Current;
-    Eat(TT_Minus);
+
+    if Op.TokenType = TT_Plus then
+        Eat(TT_Plus)
+    else
+        Eat(TT_Minus);
 
     Right := Current;
     Eat(TT_Integer);
 
-    Result := TokenInteger(Left).Val - TokenInteger(Right).Val;
+    if Op.TokenType = TT_Plus then
+        Result := TokenInteger(Left).Val + TokenInteger(Right).Val
+    else
+        Result := TokenInteger(Left).Val - TokenInteger(Right).Val;
 end;
 
 var

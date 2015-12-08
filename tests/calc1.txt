@@ -24,3 +24,7 @@ Simple calculations
     1-1  0
     100-3  97
     50${SPACE*5}- 5  45
+
+    1+1  2
+    100+3  103
+    34 +${SPACE*4}6  40
