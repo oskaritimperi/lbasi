@@ -42,6 +42,8 @@ type
         procedure Error;
         procedure SkipWhitespace;
         function AtEnd: Boolean;
+        function CurChar: Char;
+        function GetInteger: Integer;
         function GetNextToken: Token;
         procedure Eat(T: TokenType);
         function Expr: Integer;
@@ -101,7 +103,7 @@ end;
 
 procedure Interpreter.SkipWhitespace;
 begin
-    while (not AtEnd) and IsWhiteSpace(Text[CurPos]) do
+    while (not AtEnd) and IsWhiteSpace(CurChar) do
         Inc(CurPos);
 end;
 
@@ -110,11 +112,24 @@ begin
     Result := CurPos > Length(Text);
 end;
 
-function Interpreter.GetNextToken: Token;
+function Interpreter.CurChar: Char;
+begin
+    Result := Text[CurPos];
+end;
+
+function Interpreter.GetInteger: Integer;
 var
-    Text_: String;
-    CurrentChar: Char;
     Start: Integer;
+begin
+    Start := CurPos;
+
+    while (not AtEnd) and IsDigit(CurChar) do
+        Inc(CurPos);
+
+    Result := StrToInt(Copy(Text, Start, CurPos - Start));
+end;
+
+function Interpreter.GetNextToken: Token;
 begin
     SkipWhitespace;
 
@@ -124,27 +139,19 @@ begin
         Exit;
     end;
 
-    Start := CurPos;
-
-    while (CurPos <= Length(Text)) and IsDigit(Text[CurPos]) do
-        Inc(CurPos);
-
-    if CurPos - Start > 0 then
+    if IsDigit(CurChar) then
     begin
-        Result := TokenInteger.Create(StrToInt(Copy(Text, Start,
-            CurPos-Start)));
+        Result := TokenInteger.Create(GetInteger);
         Exit;
     end;
 
-    CurrentChar := Text[CurPos];
-
-    if CurrentChar = '+' then
+    if CurChar = '+' then
     begin
         Result := TokenPlus.Create;
         Inc(CurPos);
         Exit;
     end
-    else if CurrentChar = '-' then
+    else if CurChar = '-' then
     begin
         Result := TokenMinus.Create;
         Inc(CurPos);
