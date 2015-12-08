@@ -187,11 +187,27 @@ begin
 
     Op := Current;
 
-    if Op.TokenType = TT_Plus then
-        Eat(TT_Plus)
-    else if Op.TokenType = TT_Minus then
-        Eat(TT_Minus)
-    else if Op.TokenType = TT_Asterisk then
+    while (Op.TokenType = TT_Plus) or (Op.TokenType = TT_Minus) do
+    begin
+        Eat(Op.TokenType);
+
+        Right := Current;
+        Eat(TT_Integer);
+
+        if Op.TokenType = TT_Plus then
+            Result := TokenInteger(Left).Val + TokenInteger(Right).Val
+        else
+            Result := TokenInteger(Left).Val - TokenInteger(Right).Val;
+
+        TokenInteger(Left).Val := Result;
+
+        Op := Current;
+
+        if Op.TokenType = TT_Eof then
+            Exit;
+    end;
+
+    if Op.TokenType = TT_Asterisk then
         Eat(TT_Asterisk)
     else
         Eat(TT_Slash);
