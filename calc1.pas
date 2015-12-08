@@ -6,7 +6,7 @@ uses
     typinfo, sysutils, character;
 
 type
-    TokenType = (TT_Integer, TT_Plus, TT_Minus, TT_Eof);
+    TokenType = (TT_Integer, TT_Plus, TT_Minus, TT_Asterisk, TT_Slash, TT_Eof);
 
     Token = class
         TokenType: TokenType;
@@ -82,7 +82,6 @@ begin
     inherited Create(TT_Minus);
 end;
 
-
 constructor TokenEof.Create;
 begin
     inherited Create(TT_Eof);
@@ -142,22 +141,29 @@ begin
     if IsDigit(CurChar) then
     begin
         Result := TokenInteger.Create(GetInteger);
-        Exit;
     end
     else if CurChar = '+' then
     begin
         Result := TokenPlus.Create;
         Inc(CurPos);
-        Exit;
     end
     else if CurChar = '-' then
     begin
         Result := TokenMinus.Create;
         Inc(CurPos);
-        Exit;
-    end;
-
-    Error;
+    end
+    else if CurChar = '*' then
+    begin
+        Result := Token.Create(TT_Asterisk);
+        Inc(CurPos);
+    end
+    else if CurChar = '/' then
+    begin
+        Result := Token.Create(TT_Slash);
+        Inc(CurPos);
+    end
+    else
+        Error;
 end;
 
 procedure Interpreter.Eat(T: TokenType);
@@ -183,16 +189,24 @@ begin
 
     if Op.TokenType = TT_Plus then
         Eat(TT_Plus)
+    else if Op.TokenType = TT_Minus then
+        Eat(TT_Minus)
+    else if Op.TokenType = TT_Asterisk then
+        Eat(TT_Asterisk)
     else
-        Eat(TT_Minus);
+        Eat(TT_Slash);
 
     Right := Current;
     Eat(TT_Integer);
 
     if Op.TokenType = TT_Plus then
         Result := TokenInteger(Left).Val + TokenInteger(Right).Val
+    else if Op.TokenType = TT_Minus then
+        Result := TokenInteger(Left).Val - TokenInteger(Right).Val
+    else if Op.TokenType = TT_Asterisk then
+        Result := TokenInteger(Left).Val * TokenInteger(Right).Val
     else
-        Result := TokenInteger(Left).Val - TokenInteger(Right).Val;
+        Result := Round(TokenInteger(Left).Val / TokenInteger(Right).Val);
 end;
 
 var

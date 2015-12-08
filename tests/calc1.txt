@@ -28,3 +28,6 @@ Simple calculations
     1+1  2
     100+3  103
     34 +${SPACE*4}6  40
+
+    10/2  5
+    3*4  12
