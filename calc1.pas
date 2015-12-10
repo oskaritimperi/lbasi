@@ -32,7 +32,7 @@ type
         constructor Create;
     end;
 
-    Lexer = class
+    TLexer = class
         Text: AnsiString;
         CurPos: Integer;
 
@@ -46,11 +46,11 @@ type
         function GetNextToken: Token;
     end;
 
-    Interpreter = class
-        Lexer: Lexer;
+    TInterpreter = class
+        Lexer: TLexer;
         CurrentToken: Token;
 
-        constructor Create(Lexer_: Lexer);
+        constructor Create(Lexer_: TLexer);
 
         procedure Error;
         procedure Eat(T: TokenType);
@@ -95,35 +95,35 @@ begin
     inherited Create(TT_Eof);
 end;
 
-constructor Lexer.Create(Text_: String);
+constructor TLexer.Create(Text_: String);
 begin
     inherited Create;
     Text := Text_;
     CurPos := 1;
 end;
 
-procedure Lexer.Error;
+procedure TLexer.Error;
 begin
     Raise Exception.Create('invalid input');
 end;
 
-procedure Lexer.SkipWhitespace;
+procedure TLexer.SkipWhitespace;
 begin
     while (not AtEnd) and IsWhiteSpace(CurChar) do
         Inc(CurPos);
 end;
 
-function Lexer.AtEnd: Boolean;
+function TLexer.AtEnd: Boolean;
 begin
     Result := CurPos > Length(Text);
 end;
 
-function Lexer.CurChar: Char;
+function TLexer.CurChar: Char;
 begin
     Result := Text[CurPos];
 end;
 
-function Lexer.GetInteger: Integer;
+function TLexer.GetInteger: Integer;
 var
     Start: Integer;
 begin
@@ -135,7 +135,7 @@ begin
     Result := StrToInt(Copy(Text, Start, CurPos - Start));
 end;
 
-function Lexer.GetNextToken: Token;
+function TLexer.GetNextToken: Token;
 begin
     SkipWhitespace;
 
@@ -173,18 +173,18 @@ begin
         Error;
 end;
 
-constructor Interpreter.Create(Lexer_: Lexer);
+constructor TInterpreter.Create(Lexer_: TLexer);
 begin
     Lexer := Lexer_;
     CurrentToken := Default(Token);
 end;
 
-procedure Interpreter.Error;
+procedure TInterpreter.Error;
 begin
     Raise Exception.Create('syntax error');
 end;
 
-procedure Interpreter.Eat(T: TokenType);
+procedure TInterpreter.Eat(T: TokenType);
 begin
     if CurrentToken.TokenType = T then
     begin
@@ -194,7 +194,7 @@ begin
         Error;
 end;
 
-function Interpreter.Expr: Integer;
+function TInterpreter.Expr: Integer;
 var
     Left, Op, Right: Token;
 begin
@@ -244,15 +244,15 @@ begin
 end;
 
 var
-    Lexer_: Lexer;
-    Interp: Interpreter;
+    Lexer: TLexer;
+    Interp: TInterpreter;
     Line: String;
     I: Integer;
 
 procedure InterpString(S: String);
 begin
-    Lexer_ := Lexer.Create(S);
-    Interp := Interpreter.Create(Lexer_);
+    Lexer := TLexer.Create(S);
+    Interp := TInterpreter.Create(Lexer);
     WriteLn(Interp.Expr);
     FreeAndNil(Interp);
 end;
