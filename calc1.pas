@@ -176,7 +176,7 @@ end;
 constructor TInterpreter.Create(Lexer_: TLexer);
 begin
     Lexer := Lexer_;
-    CurrentToken := Default(Token);
+    CurrentToken := Lexer.GetNextToken;
 end;
 
 procedure TInterpreter.Error;
