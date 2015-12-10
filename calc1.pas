@@ -6,7 +6,8 @@ uses
     typinfo, sysutils, character;
 
 type
-    TokenType = (TT_Integer, TT_Plus, TT_Minus, TT_Asterisk, TT_Slash, TT_Eof);
+    TokenType = (TT_Integer, TT_Plus, TT_Minus, TT_Asterisk, TT_Slash, TT_Eof,
+        TT_LParen, TT_RParen);
 
     Token = class
         TokenType: TokenType;
@@ -171,6 +172,16 @@ begin
         Result := Token.Create(TT_Slash);
         Inc(CurPos);
     end
+    else if CurChar = '(' then
+    begin
+        Result := Token.Create(TT_LParen);
+        Inc(CurPos);
+    end
+    else if CurChar = ')' then
+    begin
+        Result := Token.Create(TT_RParen);
+        Inc(CurPos);
+    end
     else
         Error;
 end;
@@ -202,14 +213,30 @@ var
     T: Token;
 begin
     T := CurrentToken;
-    Eat(TT_Integer);
-    Result := TokenInteger(T).Val;
+
+    if T.TokenType = TT_Integer then
+    begin
+        Eat(TT_Integer);
+        Result := TokenInteger(T).Val;
+    end
+    else if T.TokenType = TT_LParen then
+    begin
+        Eat(TT_LParen);
+        Result := Expr;
+        Eat(TT_RParen);
+    end
+    else
+        Error;
 end;
 
 function TInterpreter.Expr: Integer;
 var
     Tok: Token;
 begin
+    // expr : term ((PLUS|MINUS) term)*
+    // term : factor ((MUL|DIV) factor)*
+    // factor : INTEGER | LPAREN expr RPAREN
+
     Result := Term;
 
     while CurrentToken.TokenType in [TT_Plus, TT_Minus] do
