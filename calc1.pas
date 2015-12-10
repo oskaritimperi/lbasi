@@ -32,10 +32,9 @@ type
         constructor Create;
     end;
 
-    Interpreter = class
+    Lexer = class
         Text: AnsiString;
         CurPos: Integer;
-        Current: Token;
 
         constructor Create(Text_: AnsiString);
 
@@ -45,6 +44,15 @@ type
         function CurChar: Char;
         function GetInteger: Integer;
         function GetNextToken: Token;
+    end;
+
+    Interpreter = class
+        Lexer: Lexer;
+        CurrentToken: Token;
+
+        constructor Create(Lexer_: Lexer);
+
+        procedure Error;
         procedure Eat(T: TokenType);
         function Expr: Integer;
     end;
@@ -87,36 +95,35 @@ begin
     inherited Create(TT_Eof);
 end;
 
-constructor Interpreter.Create(Text_: String);
+constructor Lexer.Create(Text_: String);
 begin
     inherited Create;
     Text := Text_;
     CurPos := 1;
-    Current := Default(Token);
 end;
 
-procedure Interpreter.Error;
+procedure Lexer.Error;
 begin
-    Raise Exception.Create('error!');
+    Raise Exception.Create('invalid input');
 end;
 
-procedure Interpreter.SkipWhitespace;
+procedure Lexer.SkipWhitespace;
 begin
     while (not AtEnd) and IsWhiteSpace(CurChar) do
         Inc(CurPos);
 end;
 
-function Interpreter.AtEnd: Boolean;
+function Lexer.AtEnd: Boolean;
 begin
     Result := CurPos > Length(Text);
 end;
 
-function Interpreter.CurChar: Char;
+function Lexer.CurChar: Char;
 begin
     Result := Text[CurPos];
 end;
 
-function Interpreter.GetInteger: Integer;
+function Lexer.GetInteger: Integer;
 var
     Start: Integer;
 begin
@@ -128,7 +135,7 @@ begin
     Result := StrToInt(Copy(Text, Start, CurPos - Start));
 end;
 
-function Interpreter.GetNextToken: Token;
+function Lexer.GetNextToken: Token;
 begin
     SkipWhitespace;
 
@@ -166,11 +173,22 @@ begin
         Error;
 end;
 
+constructor Interpreter.Create(Lexer_: Lexer);
+begin
+    Lexer := Lexer_;
+    CurrentToken := Default(Token);
+end;
+
+procedure Interpreter.Error;
+begin
+    Raise Exception.Create('syntax error');
+end;
+
 procedure Interpreter.Eat(T: TokenType);
 begin
-    if Current.TokenType = T then
+    if CurrentToken.TokenType = T then
     begin
-        Current := GetNextToken;
+        CurrentToken := Lexer.GetNextToken;
     end
     else
         Error;
@@ -180,18 +198,18 @@ function Interpreter.Expr: Integer;
 var
     Left, Op, Right: Token;
 begin
-    Current := GetNextToken;
+    CurrentToken := Lexer.GetNextToken;
 
-    Left := Current;
+    Left := CurrentToken;
     Eat(TT_Integer);
 
-    Op := Current;
+    Op := CurrentToken;
 
     while (Op.TokenType = TT_Plus) or (Op.TokenType = TT_Minus) do
     begin
         Eat(Op.TokenType);
 
-        Right := Current;
+        Right := CurrentToken;
         Eat(TT_Integer);
 
         if Op.TokenType = TT_Plus then
@@ -201,7 +219,7 @@ begin
 
         TokenInteger(Left).Val := Result;
 
-        Op := Current;
+        Op := CurrentToken;
 
         if Op.TokenType = TT_Eof then
             Exit;
@@ -212,7 +230,7 @@ begin
     else
         Eat(TT_Slash);
 
-    Right := Current;
+    Right := CurrentToken;
     Eat(TT_Integer);
 
     if Op.TokenType = TT_Plus then
@@ -226,13 +244,15 @@ begin
 end;
 
 var
+    Lexer_: Lexer;
     Interp: Interpreter;
     Line: String;
     I: Integer;
 
 procedure InterpString(S: String);
 begin
-    Interp := Interpreter.Create(S);
+    Lexer_ := Lexer.Create(S);
+    Interp := Interpreter.Create(Lexer_);
     WriteLn(Interp.Expr);
     FreeAndNil(Interp);
 end;
