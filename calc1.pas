@@ -54,6 +54,7 @@ type
 
         procedure Error;
         procedure Eat(T: TokenType);
+        function Factor: Integer;
         function Expr: Integer;
     end;
 
@@ -194,53 +195,46 @@ begin
         Error;
 end;
 
+
+function TInterpreter.Factor: Integer;
+var
+    T: Token;
+begin
+    T := CurrentToken;
+    Eat(TT_Integer);
+    Result := TokenInteger(T).Val;
+end;
+
 function TInterpreter.Expr: Integer;
 var
-    Left, Op, Right: Token;
+    Tok: Token;
 begin
-    CurrentToken := Lexer.GetNextToken;
+    Result := Factor;
 
-    Left := CurrentToken;
-    Eat(TT_Integer);
-
-    Op := CurrentToken;
-
-    while (Op.TokenType = TT_Plus) or (Op.TokenType = TT_Minus) do
+    while CurrentToken.TokenType in [TT_Asterisk, TT_Slash, TT_Plus, TT_Minus] do
     begin
-        Eat(Op.TokenType);
-
-        Right := CurrentToken;
-        Eat(TT_Integer);
-
-        if Op.TokenType = TT_Plus then
-            Result := TokenInteger(Left).Val + TokenInteger(Right).Val
-        else
-            Result := TokenInteger(Left).Val - TokenInteger(Right).Val;
-
-        TokenInteger(Left).Val := Result;
-
-        Op := CurrentToken;
-
-        if Op.TokenType = TT_Eof then
-            Exit;
+        Tok := CurrentToken;
+        if Tok.TokenType = TT_Asterisk then
+        begin
+            Eat(TT_Asterisk);
+            Result := Result * Factor;
+        end
+        else if Tok.TokenType = TT_Slash then
+        begin
+            Eat(TT_Slash);
+            Result := Round(Result / Factor);
+        end
+        else if Tok.TokenType = TT_Plus then
+        begin
+            Eat(TT_Plus);
+            Result := Round(Result + Factor);
+        end
+        else if Tok.TokenType = TT_Minus then
+        begin
+            Eat(TT_Minus);
+            Result := Round(Result - Factor);
+        end;
     end;
-
-    if Op.TokenType = TT_Asterisk then
-        Eat(TT_Asterisk)
-    else
-        Eat(TT_Slash);
-
-    Right := CurrentToken;
-    Eat(TT_Integer);
-
-    if Op.TokenType = TT_Plus then
-        Result := TokenInteger(Left).Val + TokenInteger(Right).Val
-    else if Op.TokenType = TT_Minus then
-        Result := TokenInteger(Left).Val - TokenInteger(Right).Val
-    else if Op.TokenType = TT_Asterisk then
-        Result := TokenInteger(Left).Val * TokenInteger(Right).Val
-    else
-        Result := Round(TokenInteger(Left).Val / TokenInteger(Right).Val);
 end;
 
 var
