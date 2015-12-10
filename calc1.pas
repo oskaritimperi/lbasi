@@ -56,6 +56,7 @@ type
         procedure Eat(T: TokenType);
         function Factor: Integer;
         function Expr: Integer;
+        function Term: Integer;
     end;
 
 constructor Token.Create(Type_: TokenType);
@@ -209,9 +210,31 @@ function TInterpreter.Expr: Integer;
 var
     Tok: Token;
 begin
+    Result := Term;
+
+    while CurrentToken.TokenType in [TT_Plus, TT_Minus] do
+    begin
+        Tok := CurrentToken;
+        if Tok.TokenType = TT_Plus then
+        begin
+            Eat(TT_Plus);
+            Result := Round(Result + Term);
+        end
+        else if Tok.TokenType = TT_Minus then
+        begin
+            Eat(TT_Minus);
+            Result := Round(Result - Term);
+        end;
+    end;
+end;
+
+function TInterpreter.Term: Integer;
+var
+    Tok: Token;
+begin
     Result := Factor;
 
-    while CurrentToken.TokenType in [TT_Asterisk, TT_Slash, TT_Plus, TT_Minus] do
+    while CurrentToken.TokenType in [TT_Asterisk, TT_Slash] do
     begin
         Tok := CurrentToken;
         if Tok.TokenType = TT_Asterisk then
@@ -223,16 +246,6 @@ begin
         begin
             Eat(TT_Slash);
             Result := Round(Result / Factor);
-        end
-        else if Tok.TokenType = TT_Plus then
-        begin
-            Eat(TT_Plus);
-            Result := Round(Result + Factor);
-        end
-        else if Tok.TokenType = TT_Minus then
-        begin
-            Eat(TT_Minus);
-            Result := Round(Result - Factor);
         end;
     end;
 end;
